@@ -300,7 +300,7 @@ rag-hootone/
 ├── pyproject.toml               # Project dependencies and metadata
 ├── uv.lock                      # Locked dependency versions
 ├── requirements.txt             # Alternative dependency list
-└── README.md                    # This file
+└── README_api_upload.md                    # This file
 ```
 
 ## Testing
@@ -396,7 +396,7 @@ fetch('http://localhost:8000/upload/pdf', {
 
 ## What We Built
 
-This project implements a production-ready PDF upload API with the following key accomplishments:
+This project implements a  PDF upload API with the following key accomplishments:
 
 ### Core Functionality
 
@@ -452,5 +452,5 @@ This project implements a production-ready PDF upload API with the following key
 - **Metadata First Approach**: Metadata written to filesystem immediately, then synced to DB
 - **Leaky Bucket Algorithm**: Smooth rate limiting that allows bursts while preventing overload
 
-This API serves as a foundation for document management systems, RAG (Retrieval-Augmented Generation) applications, or any system requiring secure, efficient PDF file handling with metadata tracking.
+This API serves as a foundation for document management systems and RAG (Retrieval-Augmented Generation) applications
 
