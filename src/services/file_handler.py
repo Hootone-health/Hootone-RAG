@@ -51,16 +51,25 @@ def _check_duplicate(file_name: str) -> None:
 
 
 def _check_type(file_name: str, content_type: Optional[str]) -> None:
-    if not file_name.lower().endswith(".pdf"):
-        raise HTTPException(
-            status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
-            detail="Only PDF files are allowed",
-        )
-    if content_type and content_type.lower() not in ("application/pdf", "application/x-pdf"):
-        raise HTTPException(
-            status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
-            detail="Only PDF files are allowed",
-        )
+    """
+    Validate file type based on content-type header.
+    Note: Actual file content validation happens during stream processing.
+    """
+    # Primary validation: content-type header
+    if content_type:
+        content_type_lower = content_type.lower()
+        if content_type_lower not in ("application/pdf", "application/x-pdf"):
+            raise HTTPException(
+                status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
+                detail="Only PDF files are allowed",
+            )
+    else:
+        # If content-type is missing, require .pdf extension as fallback
+        if not file_name.lower().endswith(".pdf"):
+            raise HTTPException(
+                status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
+                detail="Missing content-type header. Only PDF files are allowed",
+            )
 
 
 def _write_metadata(meta: FileMetadata) -> None:
@@ -74,12 +83,26 @@ def _write_metadata(meta: FileMetadata) -> None:
     meta_file.write_text("\n".join(lines), encoding="utf-8")
 
 
-async def _stream_to_disk(stream: AsyncIterator[bytes], dest: Path, max_bytes: int) -> int:
+async def _stream_to_disk(stream: AsyncIterator[bytes], dest: Path, max_bytes: int) -> tuple[int, bool]:
+    """
+    Stream content to disk and validate PDF magic bytes.
+    Returns (bytes_written, is_valid_pdf).
+    """
     written = 0
+    first_chunk = None
+    is_valid_pdf = False
+    
     with dest.open("wb") as f:
         async for chunk in stream:
             if not chunk:
                 continue
+            
+            # Check magic bytes on first chunk
+            if first_chunk is None:
+                first_chunk = chunk
+                if len(chunk) >= 4:
+                    is_valid_pdf = chunk[:4] == b'%PDF'
+            
             written += len(chunk)
             if written > max_bytes:
                 dest.unlink(missing_ok=True)
@@ -88,7 +111,14 @@ async def _stream_to_disk(stream: AsyncIterator[bytes], dest: Path, max_bytes: i
                     detail="Cannot be Upload! Max File size is 100 MB",
                 )
             f.write(chunk)
-    return written
+    
+    # If first chunk was too small, check the written file
+    if first_chunk is None or (len(first_chunk) < 4 and written >= 4):
+        with dest.open("rb") as f:
+            header = f.read(4)
+            is_valid_pdf = header == b'%PDF'
+    
+    return written, is_valid_pdf
 
 
 async def handle_pdf_upload(request: Request) -> UploadSuccess:
@@ -128,7 +158,18 @@ async def handle_pdf_upload(request: Request) -> UploadSuccess:
     _check_duplicate(file_name)
 
     dest_path = _storage_path(file_name)
-    bytes_written = await _stream_to_disk(request.stream(), dest_path, MAX_PDF_SIZE_BYTES)
+    
+    # Stream and validate PDF content
+    bytes_written, is_valid_pdf = await _stream_to_disk(request.stream(), dest_path, MAX_PDF_SIZE_BYTES)
+    
+    # Validate actual file content is PDF
+    if not is_valid_pdf:
+        dest_path.unlink(missing_ok=True)
+        raise HTTPException(
+            status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
+            detail="File content is not a valid PDF file",
+        )
+    
     LOGGER.info("Uploaded %s bytes to %s", bytes_written, dest_path)
 
     meta = FileMetadata(
