@@ -1,0 +1,4 @@
+unique_id=06217f62-6a38-45b2-9ef6-c0e0c0645f78
+file_name=rough.pdf
+storage_path=C:\Users\Admin\Desktop\rag-hootone\data\uploads\PDF\rough.pdf
+uploaded_at=2025-12-06T10:23:26.193511
