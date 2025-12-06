@@ -1,0 +1,15 @@
+[project]
+name = "rag-hootone"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "fastapi>=0.115.0",
+    "httpx>=0.28.1",
+    "psycopg[binary,pool]>=3.1.19",
+    "pydantic>=2.7.0",
+    "pytest>=8.3.0",
+    "python-multipart>=0.0.9",
+    "uvicorn[standard]>=0.30.0",
+]
