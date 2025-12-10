@@ -1,4 +1,0 @@
-unique_id=405e2d12-e459-45de-8243-a0e9d28851e2
-file_name=PRD-1.pdf
-storage_path=C:\Users\Admin\Desktop\rag-hootone\data\uploads\PDF\PRD-1.pdf
-uploaded_at=2025-12-06T08:08:04.650691

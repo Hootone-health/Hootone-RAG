@@ -1,4 +1,0 @@
-unique_id=6c800616-4a99-43cb-aab6-9d3c611c6bf4
-file_name=test-3.pdf
-storage_path=C:\Users\Admin\Desktop\rag-hootone\data\uploads\PDF\test-3.pdf
-uploaded_at=2025-12-06T08:06:33.821809
