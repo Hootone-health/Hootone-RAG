@@ -1,0 +1,15 @@
+services:
+  qdrant:
+    image: qdrant/qdrant:dev
+    container_name: rag-hootone-stage-2
+    ports:
+      - "6333:6333" # HTTP
+      - "6334:6334" # gRPC
+    volumes:
+      - "C:/Users/Admin/Desktop/rag-hootone/notebook/Docker bind mount:/qdrant/storage"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:6333/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
