@@ -8,6 +8,9 @@ This README summarizes only the work under `notebook/` so another developer can 
 - `embedding-demo.py` — minimal script to call the local Model Runner’s OpenAI-compatible embeddings (`ai/embeddinggemma`).
 - `Docker bind mount/` — Qdrant data directory created by the container; keep it mounted to retain collections.
 
+### Structure diagram 
+![Notebook flow and storage layout](./stage-2.png)
+
 ### Prerequisites
 - Branch: `chunking-to-vectordb-test`.
 - Local Docker available.
