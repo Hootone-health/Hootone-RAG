@@ -1,0 +1,107 @@
+services:
+  db:
+    image: postgres:17
+    healthcheck:
+      # The command to run inside the container
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s   # How often to check
+      timeout: 5s    # How long to wait for a response
+      retries: 5     # Fail after 5 consecutive attempts
+      start_period: 10s # Give it 10s to boot before checking
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "5432:5432"
+    volumes:
+      # Format: [Host Path]:[Container Path]
+      - ./postgres_data:/var/lib/postgresql/data
+
+  pgadmin:
+    image: dpage/pgadmin4
+    restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
+    ports:
+      - "5050:80"
+    depends_on:
+      db:
+        condition: service_healthy
+  
+  valkey:
+    image: valkey/valkey:8.0
+    healthcheck:
+      # Uses valkey-cli to ping the server and check if it's responding
+      test: ["CMD", "valkey-cli", "-a", "${VALKEY_PASSWORD}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    restart: always
+    environment:
+      - VALKEY_PASSWORD=${VALKEY_PASSWORD}
+    ports:
+      - "6379:6379" 
+    volumes:
+      # Maps your Windows folder to the Valkey data directory
+      - ./valkey_data:/data
+
+  redisinsight:
+    image: redis/redisinsight:latest
+    ports:
+      - "5540:5540"
+    depends_on:
+      - valkey
+  
+  qdrant:
+    image: qdrant/qdrant:latest
+    healthcheck:
+      # Uses curl to check the built-in health endpoint
+      test: ["CMD", "curl", "-f", "http://localhost:6333/healthz"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    restart: always
+    ports:
+      - "6333:6333" # HTTP API (Web UI)
+      - "6334:6334" # gRPC API
+    volumes:
+      # Maps your Windows folder to Qdrant storage
+      - ./qdrant_data:/qdrant/storage
+
+  ollama:
+    image: ollama/ollama:latest
+    restart: always
+    ports:
+      - "11434:11434"
+    volumes:
+      # Persistent storage for your downloaded AI models
+      - ./ollama_data:/root/.ollama
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+  
+  open-webui:
+    image: ghcr.io/open-webui/open-webui:main
+    restart: always
+    ports:
+      - "3000:8080"
+    environment:
+      - OLLAMA_BASE_URL=http://ollama:11434
+    volumes:
+      # Persistent storage for WebUI settings and chat history
+      - ./webui_data:/app/backend/data
+    depends_on:
+      ollama:
+        condition: service_healthy
+
+
+    
+    
