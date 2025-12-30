@@ -30,9 +30,10 @@ services:
     depends_on:
       db:
         condition: service_healthy
-  
+   
   valkey:
     image: valkey/valkey:8.0
+    command: valkey-server --requirepass ${VALKEY_PASSWORD}
     healthcheck:
       # Uses valkey-cli to ping the server and check if it's responding
       test: ["CMD", "valkey-cli", "-a", "${VALKEY_PASSWORD}", "ping"]
@@ -51,10 +52,14 @@ services:
 
   redisinsight:
     image: redis/redisinsight:latest
+    restart: always
     ports:
       - "5540:5540"
+    volumes:
+      - ./redisinsight_data:/data
     depends_on:
-      - valkey
+      valkey:
+        condition: service_healthy
   
   qdrant:
     image: qdrant/qdrant:latest
