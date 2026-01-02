@@ -48,6 +48,7 @@ valkey_data/
 qdrant_data/
 ollama_data/
 webui_data/
+redisinsight_data/
 
 # Logs
 *.log
