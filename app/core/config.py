@@ -31,6 +31,12 @@ class Settings(BaseSettings):
     QDRANT_API_KEY: Optional[str] = None
     QDRANT_URL: Optional[str] = None
     
+    # Ollama settings
+    OLLAMA_URL: str = Field(default="http://localhost:11434", env="OLLAMA_URL")
+    
+    # Qdrant collection name for RAG
+    QDRANT_COLLECTION_NAME: str = Field(default="rag-hootone", env="QDRANT_COLLECTION_NAME")
+    
     model_config = SettingsConfigDict(
         env_file=".env",
         case_sensitive=True,
