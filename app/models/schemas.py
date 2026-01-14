@@ -13,3 +13,9 @@ class LoginResponse(BaseModel):
     token: str
     user_id: UUID
     role: str
+
+
+class IngestDocumentResponse(BaseModel):
+    task_id: str
+    status: str  # PENDING or IN_PROGRESS
+    message: str
